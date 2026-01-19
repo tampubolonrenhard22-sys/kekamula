@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesan Spesial Untukmu</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+        
+        body {
+            background-color: black;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transition: background 1s ease;
+        }
+
+        /* ANIMASI ZOOM & BOUNCE (GIF + TEKS) */
+        @keyframes zoomBounceIn {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .animate-content {
+            animation: zoomBounceIn 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* STYLING AMPLOP RESPONSIF */
+        #envelope-container { perspective: 1000px; cursor: pointer; text-align: center; width: 100%; display: flex; justify-content: center; }
+        
+        .envelope-wrapper { 
+            position: relative; 
+            width: 280px; 
+            height: 180px; 
+            transition: 0.5s; 
+        }
+
+        @media (min-width: 1024px) {
+            .envelope-wrapper { width: 350px; height: 230px; }
+        }
+
+        .envelope-wrapper:hover { transform: translateY(-10px); }
+
+        .envelope-body {
+            position: absolute;
+            bottom: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #d63031, #b21f1f);
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            z-index: 1;
+        }
+
+        .envelope-flap-top {
+            position: absolute; top: 0; left: 0; width: 100%; height: 60%;
+            background: #e74c3c;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+            z-index: 3;
+            transform-origin: top;
+            transition: transform 0.6s ease;
+        }
+
+        .open-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 25px;
+            background: white;
+            color: #d63031;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 4;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* KONTEN SLIDE RESPONSIF */
+        #content-wrapper { 
+            display: none; 
+            text-align: center; 
+            padding: 20px; 
+            z-index: 5; 
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        #slide-container { opacity: 0; width: 100%; }
+
+        .gif-display { 
+            width: 80%; 
+            max-width: 250px; 
+            margin-bottom: 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); 
+        }
+
+        .message-text { 
+            color: white;
+            font-size: 1.3rem; 
+            font-weight: bold; 
+            margin-bottom: 30px; 
+            line-height: 1.5; 
+            text-shadow: 0 2px 10px rgba(0,0,0,1);
+            padding: 0 10px;
+        }
+
+        @media (min-width: 1024px) {
+            .message-text { font-size: 2rem; }
+            .gif-display { max-width: 300px; }
+        }
+        
+        .btn-action {
+            padding: 12px 35px;
+            background: #ff7675;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 5px 15px rgba(255,118,117,0.4);
+            transition: 0.3s;
+        }
+        .btn-action:hover { transform: scale(1.1); background: #e74c3c; }
+
+        .opened .envelope-flap-top { transform: rotateX(180deg); }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="https://raw.githubusercontent.com/tampubolonrenhard22-sys/kekamula/172f2bfb665787aeabcc774393073847dde52103/WhatsApp%20Audio%202026-01-19%20at%2011.36.24.mpeg" type="audio/mpeg">
+    </audio>
+
+    <div id="envelope-container">
+        <div class="envelope-wrapper" id="envelope">
+            <div class="envelope-body"></div>
+            <div class="envelope-flap-top"></div>
+            <button class="open-btn" onclick="startSequence()">OPEN</button>
+        </div>
+    </div>
+
+    <div id="content-wrapper">
+        <div id="slide-container">
+            <img id="current-gif" class="gif-display" src="" alt="gif">
+            <p id="current-text" class="message-text"></p>
+        </div>
+        <button id="btn-lanjut" class="btn-action" onclick="finalStep()">Lanjut</button>
+        <button id="btn-balas" class="btn-action" onclick="sendWA()">Balas 💬</button>
+    </div>
+
+    <script>
+        const data = [
+            { gif: "https://raw.githubusercontent.com/tampubolonrenhard22-sys/kekamula/c907eee41305ce043c9aa85342803eb28d55f4d1/soksoan.gif", text: "Kenapa semut itu kecil?", time: 5000 },
+            { gif: "https://raw.githubusercontent.com/tampubolonrenhard22-sys/kekamula/c907eee41305ce043c9aa85342803eb28d55f4d1/cubit.gif", text: "Kalau yang besar itu kan punyamu", time: 5000 },
+            { gif: "https://raw.githubusercontent.com/tampubolonrenhard22-sys/kekamula/c907eee41305ce043c9aa85342803eb28d55f4d1/lari.gif", text: "Eh, maksud akuuu", time: 5000 },
+            { gif: "https://raw.githubusercontent.com/tampubolonrenhard22-sys/kekamula/c907eee41305ce043c9aa85342803eb28d55f4d1/dansa.gif", text: "Cintaku padamu", time: 5000 },
+            { gif: "https://raw.githubusercontent.com/tampubolonrenhard22-sys/kekamula/c907eee41305ce043c9aa85342803eb28d55f4d1/pelukk.gif", text: "iyaa kann hehehe😆❤️", time: 0 }
+        ];
+
+        let index = 0;
+
+        function startSequence() {
+            // Memutar musik saat tombol OPEN diklik
+            const music = document.getElementById('bg-music');
+            music.play().catch(error => {
+                console.log("Autoplay dicegah oleh browser, tapi musik akan dicoba putar lagi.");
+            });
+
+            document.getElementById('envelope').classList.add('opened');
+            setTimeout(() => {
+                document.getElementById('envelope-container').style.display = 'none';
+                document.getElementById('content-wrapper').style.display = 'block';
+                playSlides();
+            }, 800);
+        }
+
+        function playSlides() {
+            if (index < data.length) {
+                const slide = document.getElementById('slide-container');
+                slide.classList.remove('animate-content');
+                void slide.offsetWidth; 
+                
+                document.getElementById('current-gif').src = data[index].gif;
+                document.getElementById('current-text').innerText = data[index].text;
+                slide.classList.add('animate-content');
+
+                if (data[index].time > 0) {
+                    setTimeout(() => {
+                        index++;
+                        playSlides();
+                    }, data[index].time);
+                } else {
+                    const btnNext = document.getElementById('btn-lanjut');
+                    btnNext.style.display = 'inline-block';
+                    btnNext.classList.add('animate-content');
+                }
+            }
+        }
+
+        function finalStep() {
+            const slide = document.getElementById('slide-container');
+            slide.classList.remove('animate-content');
+            void slide.offsetWidth;
+
+            const imageUrl = "https://raw.githubusercontent.com/tampubolonrenhard22-sys/kekamula/160f1a8b8c577c31bfaf93c5b5fdf39b58bdb913/rajaampat.jpg";
+            document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('${imageUrl}')`;
+            
+            document.getElementById('current-gif').src = "https://raw.githubusercontent.com/tampubolonrenhard22-sys/kekamula/8d6ae3ee42bbe84368ae6199ddf3fb6173de1e0e/berantam.gif";
+            document.getElementById('current-text').innerText = "Berantam yokk";
+            
+            slide.classList.add('animate-content');
+            
+            document.getElementById('btn-lanjut').style.display = 'none';
+            document.getElementById('btn-balas').style.display = 'inline-block';
+            document.getElementById('btn-balas').classList.add('animate-content');
+        }
+
+        function sendWA() {
+            window.location.href = "https://wa.me/6281371414093?text=Ayo%20berantam!%20😆";
+        }
+    </script>
+</body>
+</html>
